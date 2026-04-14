@@ -1,4 +1,18 @@
-.bin
-.obj
-.vs
+# Carpetas de compilación
+[Bb]in/
+[Oo]bj/
+
+# Archivos de usuario y configuración local
 *.user
+*.userosscache
+*.sln.docstates
+appsettings.Development.json
+secrets.json
+
+# Carpetas de Visual Studio / VS Code
+.vs/
+.vscode/
+
+# Archivos temporales del SO
+.DS_Store
+Thumbs.db
