@@ -1,0 +1,6 @@
+@BandTrackerAPI_HostAddress = http://localhost:5028
+
+GET {{BandTrackerAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
