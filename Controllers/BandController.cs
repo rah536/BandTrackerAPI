@@ -59,5 +59,34 @@ namespace BandTrackerAPI.Controllers
                 return StatusCode(500, $"Fallo de red al intentar conectar: {ex.Message}");
             }
         }
+        
+        [HttpGet("setlist/{idRecital}")]
+        public async Task<IActionResult> GetSetlist(string idRecital)
+        {
+            var apiKey = _configuration["SetlistFmApiKey"];
+            if (string.IsNullOrEmpty(apiKey)) return StatusCode(500, "Falta API Key");
+
+            var cliente = _httpClientFactory.CreateClient();
+            cliente.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            cliente.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            // Esta URL apunta directamente al ID del recital en lugar de buscar por nombre
+            string url = $"https://api.setlist.fm/rest/1.0/setlist/{idRecital}";
+
+            try
+            {
+                var respuesta = await cliente.GetAsync(url);
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    var datosJson = await respuesta.Content.ReadAsStringAsync();
+                    return Content(datosJson, "application/json");
+                }
+                return StatusCode((int)respuesta.StatusCode, "No se encontró el setlist.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error de red: {ex.Message}");
+            }
+        }
     }
 }
