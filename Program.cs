@@ -11,7 +11,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.AllowAnyOrigin()    // Permite que cualquier HTML/JS llame a la API
+        policy.WithOrigins("https://tu-proyecto.vercel.app") // Acá irá la URL que te dé Vercel luego
               .AllowAnyMethod()    // Permite GET, POST, etc.
               .AllowAnyHeader();   // Permite cualquier tipo de encabezado
     });

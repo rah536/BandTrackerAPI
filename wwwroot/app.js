@@ -3,8 +3,11 @@ const btnBuscar = document.getElementById('btnBuscar');
 const btnLimpiar = document.getElementById('btnLimpiar');
 const inputArtista = document.getElementById('inputArtista');
 const divResultados = document.getElementById('resultados');
+const divResumen = document.getElementById('resumenTemas');
 
 let htmlResultadosGuardados = '';
+let recitalesActuales = []; // Guarda todo lo que trajo la búsqueda
+let recitalesAsistidos = []; // Guarda solo los IDs de los shows que marcaste con "Estuve"
 
 // 2. Le decimos al botón qué hacer cuando le hagan clic
 btnBuscar.addEventListener('click', buscarShows);
@@ -31,6 +34,9 @@ async function buscarShows() {
         
         // 1. Verificamos si la banda tiene recitales
         const recitales = datosJson.setlist;
+        // guardamamos el valor de los recis seleccionados
+        recitalesActuales = recitales;
+
         if (!recitales || recitales.length === 0) {
             divResultados.innerHTML = `<div class="alert alert-warning text-center">No se encontraron shows de ${artista} en Argentina.</div>`;
             return;
@@ -59,8 +65,21 @@ async function buscarShows() {
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card h-100 bg-secondary text-light border-warning shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title text-warning fw-bold">📅 ${fecha}</h5>
-                            <p class="card-text mb-1">🏟️ ${estadio}</p>
+                            
+                            <!-- Contenedor Flex para alinear Fecha a la izquierda y Switch a la derecha -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title text-warning fw-bold mb-0">📅 ${fecha}</h5>
+                                
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input switch-asistencia" type="checkbox" 
+                                        id="switch_${idRecital}" 
+                                        onchange="alternarAsistencia('${idRecital}', this.checked)">
+                                    <!-- Dejé el label vacío para que quede más limpio, pero podés volver a poner "Fui a este show" adentro si preferís -->
+                                    <label class="form-check-label text-light" for="switch_${idRecital}"></label>
+                                </div>
+                            </div>
+
+                            <p class="card-text mb-1 mt-3">🏟️ ${estadio}</p>
                             <p class="card-text text-light opacity-75">📍 ${ciudad}</p>
                         </div>
                         <div class="card-footer bg-dark border-0">
@@ -90,6 +109,9 @@ function limpiarFiltro() {
     // Vaciamos el input de texto
     inputArtista.value = '';
     
+    // Vaciamos la lista de recitales asistidos
+    recitalesAsistidos = [];
+
     // Vaciamos el contenedor de las tarjetas
     divResultados.innerHTML = `
         <div class="col-md-10 text-center text-secondary mt-4">
@@ -162,4 +184,87 @@ async function verTemas(idRecital) {
 function volverAtras() {
     // Restauramos las tarjetas que habíamos guardado
     divResultados.innerHTML = htmlResultadosGuardados;
+}
+
+function alternarAsistencia(idRecital, estaMarcado) {
+    if (estaMarcado) {
+        // Lo agregamos a la lista de asistidos
+        recitalesAsistidos.push(idRecital);
+    } else {
+        // Lo sacamos de la lista si lo desmarca
+        recitalesAsistidos = recitalesAsistidos.filter(id => id !== idRecital);
+    }
+    
+    // Cada vez que tocás un switch, recalculamos el resumen
+    generarResumenEscuchadas();
+}
+
+function generarResumenEscuchadas() {
+    // Acá vamos a agrupar los temas. 
+    // Usamos un objeto donde la clave es la canción y el valor es un array de lugares.
+    let temasEscuchados = {}; 
+
+    recitalesAsistidos.forEach(idAsistido => {
+        // Buscamos el show completo en nuestra variable global
+        const show = recitalesActuales.find(r => r.id === idAsistido);
+        if (!show || !show.sets || !show.sets.set) return;
+
+        const anio = show.eventDate.split('-')[2]; // Extraemos el año de la fecha
+        const lugar = `${show.venue.name} ${anio}`;
+
+        // Recorremos las canciones de ese show
+        show.sets.set.forEach(set => {
+            set.song.forEach(cancion => {
+                const nombreCancion = cancion.name || "Desconocida";
+                
+                // Si la canción no existe en nuestro objeto, la creamos
+                if (!temasEscuchados[nombreCancion]) {
+                    temasEscuchados[nombreCancion] = [];
+                }
+                
+                // Agregamos el lugar al historial de esa canción
+                temasEscuchados[nombreCancion].push(lugar);
+            });
+        });
+    });
+
+    imprimirResumen(temasEscuchados);
+}
+
+function imprimirResumen(temasEscuchados) {
+    // Si desmarcamos todos los switches, vaciamos y ocultamos la caja
+    if (recitalesAsistidos.length === 0) {
+        divResumen.innerHTML = '';
+        return;
+    }
+
+    let htmlResumen = `
+        <div class="col-12 col-md-10 bg-secondary p-4 rounded shadow border border-warning">
+            <h2 class="text-warning text-center fw-bold mb-4">Lista de Temas Escuchados</h2>
+            <ol class="fs-5 text-light" style="line-height: 2;">
+    `;
+
+    // Recorremos cada canción y sus lugares
+    for (const [cancion, lugares] of Object.entries(temasEscuchados)) {
+        // Unimos el array de lugares con comas
+        const lugaresTexto = lugares.join(', ');
+        
+        // Armamos el renglón (usando un fondo blanco para el texto entre paréntesis como en tu diseño)
+        htmlResumen += `
+            <li>
+                <span class="text-info">${cancion}</span> 
+                <span class="bg-light text-dark px-2 py-1 rounded fw-bold ms-2" style="font-size: 0.9em;">
+                    (${lugaresTexto})
+                </span>
+            </li>
+        `;
+    }
+
+    htmlResumen += `
+            </ol>
+        </div>
+    `;
+
+    // Inyectamos todo en la pantalla
+    divResumen.innerHTML = htmlResumen;
 }
