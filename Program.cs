@@ -11,8 +11,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-        //policy.WithOrigins("https://tu-proyecto.vercel.app") // Acá irá la URL que te dé Vercel luego
+        //policy.AllowAnyOrigin()
+        policy.WithOrigins("https://band-tracker-front.vercel.app/")
               .AllowAnyMethod()    // Permite GET, POST, etc.
               .AllowAnyHeader();   // Permite cualquier tipo de encabezado
     });
