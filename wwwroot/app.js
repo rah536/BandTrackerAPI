@@ -4,6 +4,7 @@ const btnLimpiar = document.getElementById('btnLimpiar');
 const inputArtista = document.getElementById('inputArtista');
 const divResultados = document.getElementById('resultados');
 const divResumen = document.getElementById('resumenTemas');
+const API_BASE_URL = 'https://bandtracker-api.onrender.com';
 
 let htmlResultadosGuardados = '';
 let recitalesActuales = []; // Guarda todo lo que trajo la búsqueda
@@ -26,7 +27,7 @@ async function buscarShows() {
     `;
 
     try {
-        const respuesta = await fetch('/api/Bandas/' + artista + '/Argentina');
+        const respuesta = await fetch(API_BASE_URL + '/api/Bandas/' + artista + '/Argentina');
         
         if (!respuesta.ok) throw new Error(`Error: ${respuesta.status}`);
 
@@ -135,7 +136,7 @@ async function verTemas(idRecital) {
 
     try {
         // 2. Llamamos a nuestro nuevo endpoint del backend
-        const respuesta = await fetch('/api/Bandas/setlist/' + idRecital);
+        const respuesta = await fetch(API_BASE_URL + '/api/Bandas/setlist/' + idRecital);
         if (!respuesta.ok) throw new Error("No se pudo cargar el setlist.");
         const datos = await respuesta.json();
 
